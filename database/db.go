@@ -3,13 +3,14 @@ package database
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var mongoURI string = "mongodb://127.0.0.1:27017"
+var mongoURI string = os.Getenv("MONGO_URI")
 
 func DBInstance() *mongo.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -34,7 +35,7 @@ func DBInstance() *mongo.Client {
 var Client *mongo.Client = DBInstance()
 
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection{
-	collection := client.Database("test").Collection(collectionName)
+	collection := client.Database("restaurantDB").Collection(collectionName)
 
 	return collection
 }
