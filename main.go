@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"mongotest/initializers"
 	"mongotest/routes"
 	"os"
@@ -9,6 +10,7 @@ import (
 )
 
 func init(){
+	log.Println("init")
 	initializers.LoadEnv()
 }
 
