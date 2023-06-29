@@ -10,8 +10,8 @@ import (
 type Food struct {
 	ID     primitive.ObjectID `bson:"_id"`
 	FoodId string
-	Name   *string  `form:"name"`
-	Price  *float32 `form:"price"`
+	Name   *string  
+	Price  *float32
 	Image  []byte
 }
 
