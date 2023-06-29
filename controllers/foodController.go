@@ -6,6 +6,7 @@ import (
 	"mongotest/database"
 	"mongotest/models"
 	"net/http"
+	"regexp"
 
 	"time"
 
@@ -48,8 +49,10 @@ func NewFood() gin.HandlerFunc {
 			})
 			return
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
+		// Match .jpg or .png
+		
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		foodCount, err := foodCollection.CountDocuments(ctx, bson.D{{"name", foodReq.Name}})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -58,16 +61,25 @@ func NewFood() gin.HandlerFunc {
 			return
 		}
 		defer cancel()
-
+		
 		if foodCount > 0 {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "food already exist",
 			})
 			return
 		}
-
+		
 		// get the file from the form
 		file := foodReq.Image
+
+		// check if the file extension is valid
+		validExt := regexp.MustCompile(`\.(jpg|png)$`)
+		if !validExt.MatchString(file.Filename){
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":"only allow to upload jpg and png file",
+			})
+			return
+		}
 
 		// open file to take data
 		data, err := file.Open()
@@ -88,9 +100,9 @@ func NewFood() gin.HandlerFunc {
 			return
 		}
 
-		// 
+		//
 		food := &models.Food{
-			Name: foodReq.Name,
+			Name:  foodReq.Name,
 			Price: foodReq.Price,
 			Image: fileBytes,
 		}
