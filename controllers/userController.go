@@ -25,7 +25,9 @@ func GetUsers() gin.HandlerFunc {
 
 func GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		user, _ := c.Get("user")
 
+		c.JSON(http.StatusOK, user)
 	}
 }
 

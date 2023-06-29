@@ -78,7 +78,7 @@ func VerifyToken(signedToken string) (claims *SignDetail, msg string) {
 		return
 	}
 
-	if ok {
+	if !ok {
 		msg = "token is invalid"
 		return nil, msg
 	}
