@@ -49,29 +49,23 @@ func UpdateToken(userID, signedToken string) {
 
 	updatedObj = append(updatedObj, bson.E{"token", signedToken})
 
-	updatedAt, err := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-	if err != nil {
-		panic(err)
-	}
+	updatedAt, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 
 	updatedObj = append(updatedObj, bson.E{"updated_at", updatedAt})
 
 	upsert := true
-	filter := bson.M{
-		"user_id": userID,
-	}
+	filter := bson.M{"userid": userID}
 	options := options.UpdateOptions{
 		Upsert: &upsert,
 	}
 
-	_, err = userCollection.UpdateOne(ctx, filter, bson.D{{"$set", updatedObj}}, &options)
+	_, err := userCollection.UpdateOne(ctx, filter, bson.D{{"$set", updatedObj}}, &options)
 
 	defer cancel()
 
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
-	return
 }
 
 func VerifyToken(signedToken string) (claims *SignDetail, msg string) {

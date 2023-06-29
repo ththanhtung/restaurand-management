@@ -10,7 +10,7 @@ import (
 type User struct {
 	ID         primitive.ObjectID `bson:"_id"`
 	UserID     string             `json:"userId"`
-	Username   *string            `json:"username" validate:"required,min=2"`
+	Username   *string            `json:"username"`
 	Password   *string            `json:"password" validate:"required,min=8"`
 	Email      *string            `json:"email" validate:"email,required"`
 	Phone      *int               `json:"phone"`

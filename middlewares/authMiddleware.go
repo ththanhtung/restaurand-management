@@ -11,7 +11,7 @@ func RequireAuth() gin.HandlerFunc{
 	return func(c *gin.Context) {
 		token := c.Request.Header.Get("token")
 		if token == ""{
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusBadRequest, gin.H{
 				"error":"no authenticate token provided",
 			})
 			c.Abort()

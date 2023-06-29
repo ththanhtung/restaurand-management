@@ -91,6 +91,47 @@ func NewUser() gin.HandlerFunc {
 	}
 }
 
+func Login() gin.HandlerFunc{
+	return func(c *gin.Context) {
+		var user *models.User
+		var foundUser *models.User
+
+		c.ShouldBindJSON(&user)
+
+		if err := user.Validate(); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+		err := userCollection.FindOne(ctx, bson.D{{"email", user.Email}}).Decode(&foundUser)
+		defer cancel()
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error occurred while reading user",
+			})
+			return
+		}
+
+		passwordMatch, errMsg := helpers.VerifyPassword(*foundUser.Password, *user.Password)
+		if passwordMatch != true {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": errMsg,
+			})
+			return
+		}
+
+		token,_ := helpers.GenerateToken(*foundUser.Email, *&foundUser.UserID)
+
+		helpers.UpdateToken(foundUser.UserID, token)
+
+		c.JSON(http.StatusOK, foundUser)
+	}
+}
+
 func UpdateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
