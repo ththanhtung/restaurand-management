@@ -19,8 +19,27 @@ import (
 var foodCollection *mongo.Collection = database.OpenCollection(database.Client, "foods")
 
 func GetFoods() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10 *time.Second)
+		cursor, err :=foodCollection.Find(ctx, bson.D{})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error retrieving foods",
+			})
+			return
+		}
+		defer cancel()
 
+		var results []models.Food
+
+		if err := cursor.All(ctx, &results); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error binding foods",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, results)
 	}
 }
 

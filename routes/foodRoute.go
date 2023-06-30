@@ -13,7 +13,7 @@ func FoodRoutes(incommingRoute *gin.Engine){
 	
 	incommingRoute.GET("/foods", controllers.GetFoods())
 	incommingRoute.GET("/foods/:id", controllers.GetFood())
-	incommingRoute.POST("/foods", controllers.NewFood())
+	incommingRoute.POST("/foods", middlewares.RequireAuth(), controllers.NewFood())
 	incommingRoute.PATCH("/foods/:id",middlewares.RequireAuth(), controllers.UpdateFood())
 	incommingRoute.DELETE("/foods/:id",middlewares.RequireAuth(), controllers.DeleteFood())
 }
