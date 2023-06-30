@@ -44,8 +44,22 @@ func GetFoods() gin.HandlerFunc {
 }
 
 func GetFood() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
+	return func(c *gin.Context) {
+		foodId := c.Param("id")
+		
+		var food *models.Food
 
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		err := foodCollection.FindOne(ctx, bson.D{{"foodid", foodId}}).Decode(&food)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":"error occurred while checking food",
+			})
+			return
+		}
+		defer cancel()
+
+		c.JSON(http.StatusOK, food)
 	}
 }
 
