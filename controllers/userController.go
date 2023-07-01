@@ -130,7 +130,9 @@ func Login() gin.HandlerFunc{
 
 		helpers.UpdateToken(foundUser.UserID, token)
 
-		c.JSON(http.StatusOK, foundUser)
+		c.JSON(http.StatusOK, gin.H{
+			"token": token,
+		})
 	}
 }
 

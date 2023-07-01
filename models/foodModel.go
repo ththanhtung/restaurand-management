@@ -18,7 +18,7 @@ type Food struct {
 type FoodRequest struct {
 	Name  *string               `form:"name" validate:"required,min=1"`
 	Price *float32              `form:"price" validate:"required"`
-	Image *multipart.FileHeader `form:"foodImage"`
+	Image *multipart.FileHeader `form:"foodImage,omitempty"`
 }
 
 func (f *FoodRequest) Validate() error {
