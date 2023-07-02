@@ -8,7 +8,7 @@ import (
 )
 
 func TableRoutes(incommingRoute *gin.Engine) {
-	incommingRoute.GET("/tables")
+	incommingRoute.GET("/tables", controllers.GetTables())
 	incommingRoute.GET("/tables/:id")
 	incommingRoute.POST("/tables", middlewares.RequireAuth(), controllers.NewTable())
 	incommingRoute.PATCH("/tables/:id")

@@ -69,3 +69,28 @@ func NewTable() gin.HandlerFunc {
 		c.JSON(http.StatusCreated, table)
 	}
 }
+
+func GetTables() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		cursor, err := tableCollection.Find(ctx, bson.D{})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error retrieving tables",
+			})
+			return
+		}
+		defer cancel()
+
+		var results []models.Table
+
+		if err := cursor.All(ctx, &results); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error binding tables",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, results)
+	}
+}
