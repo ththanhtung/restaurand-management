@@ -67,19 +67,18 @@ func UpdateOrderItem() gin.HandlerFunc {
 		var updatedObject primitive.D = primitive.D{}
 
 		if orderItemReq.FoodId != "" {
-			updatedObject =append(updatedObject, bson.E{"foodid", orderItemReq.FoodId})
+			updatedObject = append(updatedObject, bson.E{"foodid", orderItemReq.FoodId})
 		}
 		if orderItemReq.OrderId != "" {
-			updatedObject =append(updatedObject, bson.E{"orderid", orderItemReq.OrderId})
+			updatedObject = append(updatedObject, bson.E{"orderid", orderItemReq.OrderId})
 		}
 		if orderItemReq.Quantity != 0 {
-			updatedObject =append(updatedObject, bson.E{"quantity", orderItemReq.Quantity})
+			updatedObject = append(updatedObject, bson.E{"quantity", orderItemReq.Quantity})
 		}
 
 		var updatedOrderItem *models.OrderItem
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		err := orderItemCollection.FindOneAndUpdate(ctx, bson.M{"_id": orderItemId}, bson.D{{"$set", updatedObject}}).Decode(&updatedOrderItem)
-
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
@@ -89,5 +88,25 @@ func UpdateOrderItem() gin.HandlerFunc {
 		defer cancel()
 
 		c.JSON(http.StatusOK, updatedOrderItem)
+	}
+}
+
+func GetOrderItem() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orderItemIdReq := c.Param("id")
+		orderItemId, _ := primitive.ObjectIDFromHex(orderItemIdReq)
+		var orderItem *models.OrderItem
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		err := orderItemCollection.FindOne(ctx, bson.M{"_id": orderItemId}).Decode(&orderItem)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error occurred while fetching order item",
+			})
+			return
+		}
+		defer cancel()
+
+		c.JSON(http.StatusOK, orderItem)
 	}
 }
