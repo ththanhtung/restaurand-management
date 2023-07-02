@@ -110,3 +110,32 @@ func GetOrderItem() gin.HandlerFunc {
 		c.JSON(http.StatusOK, orderItem)
 	}
 }
+
+func GetOrderItems() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orderIdReq := c.Query("orderid")
+		// orderId,_ := primitive.ObjectIDFromHex(orderIdReq)
+
+		groupStage := bson.D{{"$match", bson.M{"orderid": orderIdReq}}}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		cursor, err := orderItemCollection.Aggregate(ctx, mongo.Pipeline{groupStage})
+				if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error occurred while fetching order items",
+			})
+			return
+		}
+		defer cancel()
+
+		results := []bson.M{}
+		if err = cursor.All(ctx, &results);err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+		}
+		defer cancel()
+
+		c.JSON(http.StatusOK, results)
+	}
+}
