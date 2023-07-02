@@ -120,7 +120,7 @@ func GetOrderItems() gin.HandlerFunc {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		cursor, err := orderItemCollection.Aggregate(ctx, mongo.Pipeline{groupStage})
-				if err != nil {
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "error occurred while fetching order items",
 			})
@@ -129,7 +129,7 @@ func GetOrderItems() gin.HandlerFunc {
 		defer cancel()
 
 		results := []bson.M{}
-		if err = cursor.All(ctx, &results);err != nil {
+		if err = cursor.All(ctx, &results); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
 			})
@@ -137,5 +137,26 @@ func GetOrderItems() gin.HandlerFunc {
 		defer cancel()
 
 		c.JSON(http.StatusOK, results)
+	}
+}
+
+func DeleteOrderItem() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orderItemIdReq := c.Param("id")
+		orderItemId, _ := primitive.ObjectIDFromHex(orderItemIdReq)
+
+		var orderItem *models.OrderItem
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		err := orderItemCollection.FindOneAndDelete(ctx, bson.M{"_id": orderItemId}).Decode(&orderItem)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error occurred while deleting order item",
+			})
+			return
+		}
+		defer cancel()
+
+		c.JSON(http.StatusOK, orderItem)
 	}
 }
