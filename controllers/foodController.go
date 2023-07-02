@@ -195,7 +195,7 @@ func UpdateFood() gin.HandlerFunc {
 
 		updatedFood.Name = foodReq.Name
 		updatedFood.Price = foodReq.Price
-		if foodReq.Image != nil && foodReq.Image.Filename != ""{
+		if foodReq.Image != nil && foodReq.Image.Filename != "" {
 			log.Println("saving image file")
 		}
 
@@ -218,7 +218,23 @@ func UpdateFood() gin.HandlerFunc {
 }
 
 func DeleteFood() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
+	return func(c *gin.Context) {
+		foodIdReq := c.Param("id")
+		foodId, _ := primitive.ObjectIDFromHex(foodIdReq)
+		var food *models.Food
 
+		filter := bson.M{"_id": foodId}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		err := foodCollection.FindOneAndDelete(ctx, filter).Decode(&food)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		defer cancel()
+
+		c.JSON(http.StatusOK, food)
 	}
 }

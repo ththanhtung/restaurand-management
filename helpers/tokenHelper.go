@@ -74,12 +74,12 @@ func VerifyToken(signedToken string) (claims *SignDetail, msg string) {
 	claims, ok := token.Claims.(*SignDetail)
 
 	if err != nil {
-		log.Panic(err)
-		return
+		msg = err.Error()
+		return nil, msg
 	}
 
 	if !ok {
-		msg = "token is invalid"
+		msg = "token  invalid"
 		return nil, msg
 	}
 
