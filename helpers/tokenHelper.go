@@ -29,7 +29,7 @@ func GenerateToken(email, userID string) (token string, err error) {
 		Email:  email,
 		UserID: userID,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(15 * time.Minute).Unix(),
+			ExpiresAt: time.Now().Add(5 * time.Hour).Unix(),
 		},
 	}
 
