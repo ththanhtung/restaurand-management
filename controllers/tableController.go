@@ -94,3 +94,24 @@ func GetTables() gin.HandlerFunc {
 		c.JSON(http.StatusOK, results)
 	}
 }
+
+func GetTable() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tableIdReq := c.Param("id")
+		tableId, _ := primitive.ObjectIDFromHex(tableIdReq)
+
+		var table *models.Table
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		err := tableCollection.FindOne(ctx, bson.D{{"_id", tableId}}).Decode(&table)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error occurred while checking table",
+			})
+			return
+		}
+		defer cancel()
+
+		c.JSON(http.StatusOK, table)
+	}
+}
