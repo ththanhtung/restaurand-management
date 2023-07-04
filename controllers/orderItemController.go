@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var orderItemCollection *mongo.Collection = database.OpenCollection(database.Client, "orderItems")
@@ -78,7 +79,11 @@ func UpdateOrderItem() gin.HandlerFunc {
 
 		var updatedOrderItem *models.OrderItem
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		err := orderItemCollection.FindOneAndUpdate(ctx, bson.M{"_id": orderItemId}, bson.D{{"$set", updatedObject}}).Decode(&updatedOrderItem)
+
+		opts := options.FindOneAndUpdateOptions{}
+		opts.SetReturnDocument(options.After)
+
+		err := orderItemCollection.FindOneAndUpdate(ctx, bson.M{"_id": orderItemId}, bson.D{{"$set", updatedObject}}, &opts).Decode(&updatedOrderItem)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
