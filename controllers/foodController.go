@@ -238,3 +238,23 @@ func DeleteFood() gin.HandlerFunc {
 		c.JSON(http.StatusOK, food)
 	}
 }
+
+func GetFoodImage() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		foodId := c.Param("id")
+
+		var food *models.Food
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		err := foodCollection.FindOne(ctx, bson.D{{"foodid", foodId}}).Decode(&food)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "error occurred while checking food",
+			})
+			return
+		}
+		defer cancel()
+
+		c.Data(http.StatusOK, "image/jpg", food.Image)
+	}
+}
