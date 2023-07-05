@@ -2,12 +2,11 @@ package controllers
 
 import (
 	"context"
-	"io/ioutil"
 
 	"mongotest/database"
+	"mongotest/helpers"
 	"mongotest/models"
 	"net/http"
-	"regexp"
 
 	"time"
 
@@ -85,8 +84,6 @@ func NewFood() gin.HandlerFunc {
 			return
 		}
 
-		// Match .jpg or .png
-
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		foodCount, err := foodCollection.CountDocuments(ctx, bson.D{{"name", foodReq.Name}})
 		if err != nil {
@@ -104,38 +101,13 @@ func NewFood() gin.HandlerFunc {
 			return
 		}
 
-		// get the file from the form
-		file := foodReq.Image
-
-		// check if the file extension is valid
-		validExt := regexp.MustCompile(`\.(jpg|png)$`)
-		if !validExt.MatchString(file.Filename) {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "only allow to upload jpg and png file",
-			})
-			return
-		}
-
-		// open file to take data
-		data, err := file.Open()
-		defer data.Close()
+		fileBytes, err := helpers.GetImageData(foodReq.Image)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "error occurred while opening image",
+				"error": err.Error(),
 			})
-			return
 		}
 
-		// get binary file from the data to save to mongoDB
-		fileBytes, err := ioutil.ReadAll(data)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "error occurred while reading image",
-			})
-			return
-		}
-
-		//
 		food := &models.Food{
 			Name:  foodReq.Name,
 			Price: foodReq.Price,
@@ -195,35 +167,13 @@ func UpdateFood() gin.HandlerFunc {
 		updatedFood.Name = foodReq.Name
 		updatedFood.Price = foodReq.Price
 		if foodReq.Image != nil && foodReq.Image.Filename != "" {
-			// get the file from the form
-			file := foodReq.Image
 
-			// check if the file extension is valid
-			validExt := regexp.MustCompile(`\.(jpg|png)$`)
-			if !validExt.MatchString(file.Filename) {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": "only allow to upload jpg and png file",
-				})
-				return
-			}
-
-			// open file to take data
-			data, err := file.Open()
-			defer data.Close()
+			// get binary data from image
+			fileBytes, err := helpers.GetImageData(foodReq.Image)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
-					"error": "error occurred while opening image",
+					"error": err.Error(),
 				})
-				return
-			}
-
-			// get binary file from the data to save to mongoDB
-			fileBytes, err := ioutil.ReadAll(data)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"error": "error occurred while reading image",
-				})
-				return
 			}
 
 			updatedFood.Image = fileBytes
