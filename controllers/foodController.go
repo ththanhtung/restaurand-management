@@ -4,7 +4,6 @@ import (
 	"context"
 	"io/ioutil"
 
-	"log"
 	"mongotest/database"
 	"mongotest/models"
 	"net/http"
@@ -196,7 +195,38 @@ func UpdateFood() gin.HandlerFunc {
 		updatedFood.Name = foodReq.Name
 		updatedFood.Price = foodReq.Price
 		if foodReq.Image != nil && foodReq.Image.Filename != "" {
-			log.Println("saving image file")
+			// get the file from the form
+			file := foodReq.Image
+
+			// check if the file extension is valid
+			validExt := regexp.MustCompile(`\.(jpg|png)$`)
+			if !validExt.MatchString(file.Filename) {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": "only allow to upload jpg and png file",
+				})
+				return
+			}
+
+			// open file to take data
+			data, err := file.Open()
+			defer data.Close()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "error occurred while opening image",
+				})
+				return
+			}
+
+			// get binary file from the data to save to mongoDB
+			fileBytes, err := ioutil.ReadAll(data)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "error occurred while reading image",
+				})
+				return
+			}
+
+			updatedFood.Image = fileBytes
 		}
 
 		// update document to db
