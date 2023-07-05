@@ -1,26 +1,42 @@
 package controllers
 
-// import (
-// 	"mongotest/models"
+import (
+	"context"
+	"mongotest/database"
+	"mongotest/models"
+	"net/http"
+	"time"
 
-// 	"github.com/gin-gonic/gin"
-// 	"go.mongodb.org/mongo-driver/bson"
-// )
+	"github.com/gin-gonic/gin"
+	// "go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
-// func NewInvoice() gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		var invoiceReq *models.InvoiceRequest
+var invoicesCollection *mongo.Collection = database.OpenCollection(database.Client, "invoices")
 
-// 		c.ShouldBindJSON(&invoiceReq)
+func NewInvoice() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var invoiceReq *models.InvoiceRequest
 
-// 		invoiceLookupStage := bson.D{{"$lookup",bson.D{{"from","orderitems"}, {"localField","orderid"}, {"foreignField","orderid"},{"as", "orderitem"}}}}
-// 		invoiceUnwindStage := bson.D{{"$unwind","$orderitem"}}
-// 		invoiceProjectStage := bson.D{{"$project", bson.D{{"invoiceid",1}, {"foodid", "$orderitem.foodid"},{"quantity","$orderitem.quantity"}}}}
-// 		orderItemLookupStage := bson.D{{"$lookup", bson.D{{"from","foods"},{"localField","foodid"},{"foreignField","foodid"},{"as","food"}}}}
-// 		orderItemUnwindStage := bson.D{{"$unwind","$food"}}
-// 		orderItemAddFieldStage := bson.D{{"$addField", bson.D{""} bson.D{{"$multiply", []interface{}{
-// 			"$food.price", "$quantity",
-// 		}}}}}
-// 		orderItemProjectStage := bson.D{{"$project", bson.D{{"invoiceid",1},}}}
-// 	}
-// }
+		c.ShouldBindJSON(&invoiceReq)
+
+		invoice := &models.Invoice{
+			OrderId: invoiceReq.OrderId,
+		}
+		invoice.ID = primitive.NewObjectID()
+		invoice.InvoiceId = invoice.ID.Hex()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		_, err := invoicesCollection.InsertOne(ctx, invoice)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		defer cancel()
+
+		c.JSON(http.StatusOK, invoice)
+	}
+}
