@@ -36,7 +36,13 @@ func NewOrderItem() gin.HandlerFunc {
 		orderItem.ID = primitive.NewObjectID()
 		orderItem.OrderItemId = orderItem.ID.Hex()
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10 *time.Second)
+		var food *models.Food
+		foodCollection.FindOne(ctx, bson.M{"foodid": orderItem.FoodId}).Decode(&food)
+		defer cancel()
+
+		orderItem.UnitPrice = float32(orderItem.Quantity) * *food.Price
+
 		_, err := orderItemCollection.InsertOne(ctx, orderItem)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
