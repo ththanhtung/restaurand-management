@@ -3,24 +3,26 @@ package database
 import (
 	"context"
 	"log"
+	"mongotest/initializers"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var mongoURI string = "mongodb://localhost:27017"
-
 func DBInstance() *mongo.Client {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	initializers.LoadEnv()
+
+	var mongoURI string = os.Getenv("MONGO_URI")
 	log.Println("mongo uri",mongoURI)
-
+	
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI))
-
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
+	
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	if err = client.Connect(ctx); err != nil {
 		log.Fatal(err.Error())
 	}
@@ -35,7 +37,8 @@ func DBInstance() *mongo.Client {
 var Client *mongo.Client = DBInstance()
 
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection{
-	collection := client.Database("restaurantDB").Collection(collectionName)
+	databaseName := os.Getenv("DATABASE_NAME")
+	collection := client.Database(databaseName).Collection(collectionName)
 
 	return collection
 }
